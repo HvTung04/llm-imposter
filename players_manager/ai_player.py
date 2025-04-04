@@ -1,11 +1,13 @@
 from models.groq_model import GroqModel
+from players_manager.player import Player
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
-class AIPlayer:
-    def __init__(self, model_name=os.getenv("AI_PLAYER_MODEL"), system_prompt=None):
+class AIPlayer(Player):
+    def __init__(self, name, model_name=os.getenv("AI_PLAYER_MODEL"), system_prompt=None):
+        super().__init__(name)
         self.model = GroqModel(
             model_name=model_name,
             system_prompt=system_prompt

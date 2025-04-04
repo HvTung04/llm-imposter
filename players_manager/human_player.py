@@ -1,5 +1,8 @@
-class HumanPlayer:
+from players_manager.player import Player
+
+class HumanPlayer(Player):
     def __init__(self, name: str):
+        super().__init__(name)
         self.name = name
 
     def answer(self):
