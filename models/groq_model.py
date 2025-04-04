@@ -6,8 +6,20 @@ load_dotenv()
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
+
 class GroqModel:
-    def __init__(self, model_name, client=client, system_prompt=None, response_format=None, temperature=0.5, max_tokens=2048, top_p=0.5, stream=False, stop=None):
+    def __init__(
+        self,
+        model_name,
+        client=client,
+        system_prompt=None,
+        response_format=None,
+        temperature=0.5,
+        max_tokens=2048,
+        top_p=0.5,
+        stream=False,
+        stop=None,
+    ):
         """
         Initialize the GroqModel with the given parameters.
 
@@ -34,23 +46,20 @@ class GroqModel:
     def generate_plain_text(self, prompt):
         if self.system_prompt:
             messages = [
-            {
-                "role": "system",
-                "content": self.system_prompt,
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ]
+                {
+                    "role": "system",
+                    "content": self.system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ]
         else:
             messages = [
-            {
-                "role": "user",
-                "content": prompt
-            },
-        ]
-            
+                {"role": "user", "content": prompt},
+            ]
+
         chat_completion = self.client.chat.completions.create(
             messages=messages,
             model=self.model_name,
@@ -61,18 +70,22 @@ class GroqModel:
             stream=self.stream,
             stop=self.stop,
         )
-    
+
         output = chat_completion.choices[0].message.content
         return output
 
     def tools_chat(self, messages, tools):
-        response = self.client.chat.completions.create(
-            messages=messages,
-            model=self.model_name,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            stream=self.stream,
-            tools=tools,
-            tool_choice="auto",
-        ).choices[0].message
+        response = (
+            self.client.chat.completions.create(
+                messages=messages,
+                model=self.model_name,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                stream=self.stream,
+                tools=tools,
+                tool_choice="auto",
+            )
+            .choices[0]
+            .message
+        )
         return response, response.tool_calls
