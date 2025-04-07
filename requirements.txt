@@ -1,2 +1,4 @@
 groq
 python-dotenv
+flask
+flask-cors
