@@ -39,10 +39,11 @@ def active_players():
     if not game:
         return jsonify({"error": "Game not found."}), 404
 
-    active_ids = game.get_active_players()
+    active_players = game.get_active_players()
     return jsonify({
-        "active_player_ids": active_ids,
-        "active_count": len(active_ids)
+        "active_player_ids": active_players["ids"],
+        "active_player_names": active_players["names"],
+        "active_count": len(active_players["ids"]),
     })
 
 @app.route('/add_player', methods=['POST'])

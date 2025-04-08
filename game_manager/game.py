@@ -82,7 +82,7 @@ class Game:
         Collect answers from AI players.
         """
         if player_info["is_ai"] and not player_info["eliminated"]:
-            question = self.generate_question()
+            question = self.current_question
             answer = player_info["player"].answer(question)  # Placeholder for AI answer generation
             self.submit_answer(player_id, answer)
 
@@ -117,7 +117,10 @@ class Game:
         Returns:
             list: List of active players.
         """
-        return [player_id for player_id, info in self.players.items() if not info["eliminated"]]
+        return {
+            "ids": [player_id for player_id, info in self.players.items() if not info["eliminated"]],
+            "names": [info["name"] for player_id, info in self.players.items() if not info["eliminated"]],
+        }
     
     def game_loop(self):
         # Wait for enough players to join
@@ -129,7 +132,7 @@ class Game:
         print("Game started!")
         while self.status == "in_progress":
             self.turn += 1
-            self.current_question = self.generate_question()
+            self.current_question = self.current_question
             print(f"Turn {self.turn}: {self.current_question}")
 
             print("Collecting answers...")
