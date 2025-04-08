@@ -166,5 +166,36 @@ def game_qr():
         "join_url": join_url
     })
 
+@app.route('/rank_answers', methods=['POST'])
+def rank_answers():
+    """
+    Rank the answers of players.
+    """
+    if not game:
+        return jsonify({"error": "Game session not found."}), 404
+
+    if game.status != "in_progress":
+        return jsonify({"error": "Game is not in progress."}), 400
+
+    ranking = game.ranking()
+    return jsonify(ranking)
+
+@app.route('/eliminate_player', methods=['POST'])
+def eliminate_player():
+    """
+    Eliminate a player from the game.
+    """
+    if not game:
+        return jsonify({"error": "Game session not found."}), 404
+
+    data = request.get_json()
+    player_id = data.get('player_id')
+
+    if not player_id:
+        return jsonify({"error": "Player ID is required."}), 400
+
+    game.eliminate_player(player_id)
+    return jsonify({"message": "Player eliminated successfully."})
+
 if __name__ == "__main__":
     app.run(debug=True)
