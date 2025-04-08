@@ -5,157 +5,146 @@ from players_manager.admin import Admin
 
 class Game:
     def __init__(self, answer_timeout=30, min_players=2):
-        # Game configuration
-        self.answer_timeout = answer_timeout  # seconds
+        self.answer_timeout = answer_timeout
         self.min_players = min_players
         self.turn = 0
-        self.status = "waiting" # waiting, in_progress, finished
-        self.players = {} # Key: Player_ID, Value: Player info
+        self.status = "waiting"  # waiting, in_progress, finished
+        self.players = []  # List of player dicts
         self.current_question = None
-        self.answers = {} # Key: Player_ID, Value: Answer
-
-        # Admin
+        self.answers = []  # List of {player_id, answer}
+        self.turn_start_time = None
         self.admin = Admin()
 
     def get_state(self):
-        """
-        Get the current state of the game.
-
-        Returns:
-            dict: The current state of the game.
-        """
         return {
             "status": self.status,
             "turn": self.turn,
-            "players": list(self.players.keys()),
+            "players": [
+                {
+                    "id": player["id"],
+                    "name": player["name"],
+                    "is_ai": player["is_ai"],
+                    "eliminated": player["eliminated"]
+                } for player in self.players
+            ],
             "current_question": self.current_question,
-            "answers": self.answers
+            "answers": self.answers,
+            "remaining_time": self.get_remaining_time()
         }
 
     def add_player(self, player, is_ai=False):
-        """
-        Add a player to the game.
-
-        Args:
-            player (Player): The name of the player.
-            is_ai (bool): Whether the player is an AI player or not.
-
-        Returns:
-            str: The unique ID of the added player.
-        """
         player_id = str(uuid.uuid4())
-        self.players[player_id] = {
+        player_data = {
+            "id": player_id,
             "player": player,
             "name": player.name,
             "is_ai": is_ai,
             "eliminated": False
         }
+        self.players.append(player_data)
         print(f"Player {player.name} added with ID: {player_id}")
         return player_id
-    
-    def generate_question(self):
-        """
-        Generate a question for the current turn.
 
-        Returns:
-            str: The generated question.
-        """
-        question = self.admin.ask()
-        self.current_question = question
+    def find_player(self, player_id):
+        for player in self.players:
+            if player["id"] == player_id:
+                return player
+        return None
+
+    def generate_question(self):
+        self.current_question = self.admin.ask()
+        return self.current_question
 
     def submit_answer(self, player_id, answer):
-        """
-        Submit an answer for the current turn.
-
-        Args:
-            player_id (str): The ID of the player submitting the answer.
-            answer (str): The submitted answer.
-        """
-        if player_id in self.players and not self.players[player_id]["eliminated"]:
-            self.answers[player_id] = answer
-            print(f"Player {self.players[player_id]['name']} submitted answer: {answer}")
+        player = self.find_player(player_id)
+        if player and not player["eliminated"]:
+            self.answers.append({
+                "player_id": player_id,
+                "answer": answer
+            })
+            print(f"Player {player['name']} submitted answer: {answer}")
+            return True
         else:
             print(f"Player {player_id} is not in the game or has been eliminated.")
+            return False
 
-    def collect_ai_answers(self, player_id, player_info):
-        """
-        Collect answers from AI players.
-        """
+    def collect_ai_answer(self, player_id, player_info):
         if player_info["is_ai"] and not player_info["eliminated"]:
-            question = self.current_question
-            answer = player_info["player"].answer(question)  # Placeholder for AI answer generation
+            answer = player_info["player"].answer(self.current_question)
             self.submit_answer(player_id, answer)
 
     def ranking(self):
-        """
-        Rank the answers provided by players.
-        """
-        # Placeholder for ranking logic
-        ranked_answers = sorted(self.answers.items(), key=lambda x: random.random())
+        random.shuffle(self.answers)
         print("Ranked Answers:")
-        for player_id, answer in ranked_answers:
-            print(f"Player {self.players[player_id]['name']}: {answer}")
-        return ranked_answers
-    
-    def eliminate_player(self, player_id):
-        """
-        Eliminate a player from the game.
+        for entry in self.answers:
+            player = self.find_player(entry["player_id"])
+            if player:
+                print(f"Player {player['name']}: {entry['answer']}")
+        return self.answers
 
-        Args:
-            player_id (str): The ID of the player to eliminate.
-        """
-        if player_id in self.players:
-            self.players[player_id]["eliminated"] = True
-            print(f"Player {self.players[player_id]['name']} has been eliminated.")
+    def eliminate_player(self, player_id):
+        player = self.find_player(player_id)
+        if player:
+            player["eliminated"] = True
+            print(f"Player {player['name']} has been eliminated.")
         else:
             print(f"Player {player_id} not found.")
-        
+
     def get_active_players(self):
-        """
-        Get a list of active players.
-
-        Returns:
-            list: List of active players.
-        """
+        active_players = [p for p in self.players if not p["eliminated"]]
         return {
-            "ids": [player_id for player_id, info in self.players.items() if not info["eliminated"]],
-            "names": [info["name"] for player_id, info in self.players.items() if not info["eliminated"]],
+            "ids": [p["id"] for p in active_players],
+            "names": [p["name"] for p in active_players]
         }
-    
-    def game_loop(self):
-        # Wait for enough players to join
-        while len(self.players) < self.min_players:
-            print(f"Waiting for players to join... (Current: {len(self.players)})")
-            time.sleep(2)
 
+    def start_game(self):
         self.status = "in_progress"
+
+    def play_turn(self):
+        if self.status != "in_progress":
+            print("Game is not in progress.")
+            return
+
+        self.turn += 1
+        self.generate_question()
+        print(f"Question for turn {self.turn}: {self.current_question}")
+
+        for player in self.players:
+            if not player["eliminated"] and player["is_ai"]:
+                self.collect_ai_answer(player["id"], player)
+        self.turn_start_time = time.time()
+    
+    def get_remaining_time(self):
+        if self.turn_start_time is None:
+            return self.answer_timeout
+        elapsed = time.time() - self.turn_start_time
+        return max(0, int(self.answer_timeout - elapsed))
+
+    def game_loop(self):
+        self.start_game()
         print("Game started!")
         while self.status == "in_progress":
             self.turn += 1
-            self.current_question = self.current_question
+            self.generate_question()
             print(f"Turn {self.turn}: {self.current_question}")
+            self.answers = []
 
             print("Collecting answers...")
-            # Collect answers from players
-            for player_id, player_info in self.players.items():
-                if not player_info["eliminated"]:
-                    if player_info["is_ai"]:
-                        self.collect_ai_answers(player_id, player_info)
+            for player in self.players:
+                if not player["eliminated"]:
+                    if player["is_ai"]:
+                        self.collect_ai_answer(player["id"], player)
                     else:
-                        # Placeholder for human player answer submission
-                        answer = input(f"{player_info['name']}, please submit your answer: ")
-                        self.submit_answer(player_id, answer)
+                        answer = input(f"{player['name']}, please submit your answer: ")
+                        self.submit_answer(player["id"], answer)
 
-            # Rank answers and eliminate players if necessary
             ranked_answers = self.ranking()
-            # Placeholder for elimination logic
             if len(ranked_answers) > 1:
-                eliminated_player_id = ranked_answers[-1][0]
+                eliminated_player_id = ranked_answers[-1]["player_id"]
                 self.eliminate_player(eliminated_player_id)
 
-            # Check if the game should end
-            active_players = self.get_active_players()
-            if len(active_players) <= 1:
+            active = self.get_active_players()
+            if len(active["ids"]) <= 1:
                 print("Game over! Only one player remains.")
                 self.status = "finished"
                 break

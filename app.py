@@ -31,6 +31,34 @@ def create_game():
         "message": "Game session created successfully."
     })
 
+@app.route("/start_game", methods=["POST"])
+def start_game():
+    """
+    Start the game session.
+    """
+    if not game:
+        return jsonify({"error": "Game session not found."}), 404
+
+    if game.status == "waiting":
+        game.start_game()
+        return jsonify({"message": "Game started successfully."})
+    else:
+        return jsonify({"error": "Game is already in progress or finished."}), 400
+
+@app.route("/next_turn", methods=["POST"])
+def next_turn():
+    """
+    Move to the next turn in the game.
+    """
+    if not game:
+        return jsonify({"error": "Game session not found."}), 404
+
+    if game.status != "in_progress":
+        return jsonify({"error": "Game is not in progress."}), 400
+
+    game.play_turn()
+    return jsonify({"message": "Moved to the next turn."})
+
 @app.route('/active_players', methods=['GET'])
 def active_players():
     """
@@ -65,17 +93,28 @@ def add_player():
 
 @app.route('/submit_answer', methods=['POST'])
 def submit_answer():
+    if game.status != "in_progress":
+        return jsonify({"error": "Game is not in progress."}), 400
+
     data = request.get_json()
     player_id = data.get('player_id')
     answer = data.get('answer')
 
+    player = game.find_player(player_id)
+    if not player:
+        return jsonify({"error": "Player not found."}), 404
+    if player["is_ai"] or player["eliminated"]:
+        return jsonify({"error": "This player cannot submit answers."}), 400
+
     if not game:
         return jsonify({"error": "Game session not found."}), 404
 
-    if game.submit_answer(player_id, answer):
+    try:
+        game.submit_answer(player_id, answer)
         return jsonify({"message": "Answer submitted successfully."})
-    else:
-        return jsonify({"error": "Failed to submit answer."}), 400
+    except Exception as e:
+
+        return jsonify({"error": f"Failed to submit answer. Message {e}"}), 400
 
 @app.route('/game_state', methods=['GET'])
 def game_state():
