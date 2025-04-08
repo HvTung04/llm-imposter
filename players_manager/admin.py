@@ -63,12 +63,3 @@ class Admin:
                 scores = self.rank_model.generate_plain_text(prompt)
                 print(f"Retrying... {i + 1}/{retry}")
         return scores
-
-    def eliminate(self, player_id):
-        """
-        Eliminate a player from the game.
-
-        Args:
-            player_id (str): The ID of the player to eliminate.
-        """
-        pass
