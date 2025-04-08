@@ -113,7 +113,6 @@ def submit_answer():
         game.submit_answer(player_id, answer)
         return jsonify({"message": "Answer submitted successfully."})
     except Exception as e:
-
         return jsonify({"error": f"Failed to submit answer. Message {e}"}), 400
 
 @app.route('/game_state', methods=['GET'])

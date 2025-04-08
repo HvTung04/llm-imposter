@@ -74,13 +74,19 @@ class Game:
             self.submit_answer(player_id, answer)
 
     def ranking(self):
-        random.shuffle(self.answers)
-        print("Ranked Answers:")
-        for entry in self.answers:
-            player = self.find_player(entry["player_id"])
-            if player:
-                print(f"Player {player['name']}: {entry['answer']}")
-        return self.answers
+        if len(self.answers) != len(self.get_active_players()["ids"]):
+            print("Not all players have answered.")
+            return []
+        all_ids = [answer["player_id"] for answer in self.answers]
+        all_answers = [answer["answer"] for answer in self.answers]
+
+        all_ranks = self.admin.rank(self.current_question, all_answers)
+
+        return [{
+            "player_id": all_ids[i],
+            "answer": all_answers[i],
+            "rank": all_ranks[i]
+        } for i in range(len(all_ids))]
 
     def eliminate_player(self, player_id):
         player = self.find_player(player_id)
@@ -108,43 +114,17 @@ class Game:
         self.turn += 1
         self.generate_question()
         print(f"Question for turn {self.turn}: {self.current_question}")
+        self.turn_start_time = time.time()
 
+    def play_turn_ai(self):
+        if self.status != "in_progress":
+            print("Game is not in progress.")
         for player in self.players:
             if not player["eliminated"] and player["is_ai"]:
                 self.collect_ai_answer(player["id"], player)
-        self.turn_start_time = time.time()
     
     def get_remaining_time(self):
         if self.turn_start_time is None:
             return self.answer_timeout
         elapsed = time.time() - self.turn_start_time
         return max(0, int(self.answer_timeout - elapsed))
-
-    def game_loop(self):
-        self.start_game()
-        print("Game started!")
-        while self.status == "in_progress":
-            self.turn += 1
-            self.generate_question()
-            print(f"Turn {self.turn}: {self.current_question}")
-            self.answers = []
-
-            print("Collecting answers...")
-            for player in self.players:
-                if not player["eliminated"]:
-                    if player["is_ai"]:
-                        self.collect_ai_answer(player["id"], player)
-                    else:
-                        answer = input(f"{player['name']}, please submit your answer: ")
-                        self.submit_answer(player["id"], answer)
-
-            ranked_answers = self.ranking()
-            if len(ranked_answers) > 1:
-                eliminated_player_id = ranked_answers[-1]["player_id"]
-                self.eliminate_player(eliminated_player_id)
-
-            active = self.get_active_players()
-            if len(active["ids"]) <= 1:
-                print("Game over! Only one player remains.")
-                self.status = "finished"
-                break
