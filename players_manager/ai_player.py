@@ -1,17 +1,18 @@
 from models.groq_model import GroqModel
 from players_manager.player import Player
+from prompts.ai_player import system_prompt
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
 
+
 class AIPlayer(Player):
-    def __init__(self, name, model_name=os.getenv("AI_PLAYER_MODEL"), system_prompt=None):
+    def __init__(
+        self, name, model_name=os.getenv("AI_PLAYER_MODEL"), system_prompt=system_prompt
+    ):
         super().__init__(name)
-        self.model = GroqModel(
-            model_name=model_name,
-            system_prompt=system_prompt
-            )
+        self.model = GroqModel(model_name=model_name, system_prompt=system_prompt)
 
     def answer(self, question):
         """
@@ -25,7 +26,7 @@ class AIPlayer(Player):
         """
         response = self.model.generate_plain_text(question)
         return response
-    
+
     def submit(self):
         """
         Submit the AI player's answer to the game.
