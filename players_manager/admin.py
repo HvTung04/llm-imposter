@@ -1,15 +1,32 @@
 from models.groq_model import GroqModel
 from dotenv import load_dotenv
+from prompts.admin import admin_ask, admin_rank
+import ast
 import os
 
 load_dotenv()
 
 class Admin:
-    def __init__(self, model_name=os.getenv("ADMIN_MODEL"), system_prompt=None):
-        self.model = GroqModel(
+    def __init__(self, model_name=os.getenv("ADMIN_MODEL"), ask_system_prompt=admin_ask, rank_system_prompt=admin_rank):
+        self.ask_model = GroqModel(
             model_name=model_name,
-            system_prompt=system_prompt
-            )
+            system_prompt=ask_system_prompt,
+            temperature=0.5,
+            max_tokens=128,
+            top_p=0.5,
+            stream=False,
+            stop=None
+        )
+
+        self.rank_model = GroqModel(
+            model_name=model_name,
+            system_prompt=rank_system_prompt,
+            temperature=0.5,
+            max_tokens=128,
+            top_p=0.5,
+            stream=False,
+            stop=None
+        )
 
     def ask(self):
         """
@@ -18,20 +35,34 @@ class Admin:
         Returns:
             str: The generated question.
         """
-        question = "What is life?"
+        question = self.ask_model.memory_chat()
         return question
     
-    def rank(self, answers):
+    def rank(self, question, answers, retry=5):
         """
         Rank the answers provided by players.
 
         Args:
+            question (str): The question to rank the answers for.
             answers (list): List of answers provided by players.
 
         Returns:
-            list: Ranked list of answers.
+            list: Probability scores for each answer.
         """
-        pass
+        prompt = f"Câu hỏi: {question}\n\n"
+        for i, answer in enumerate(answers):
+            prompt += f"Đáp án {i + 1}: {answer}\n"
+        scores = self.rank_model.generate_plain_text(prompt)
+        
+        for i in range(retry=5):
+            try:
+                scores = ast.literal_eval(scores)
+                break
+            except Exception as e:
+                print(f"Error parsing scores: {e}")
+                scores = self.rank_model.generate_plain_text(prompt)
+                print(f"Retrying... {i + 1}/{retry}")
+        return scores
 
     def eliminate(self, player_id):
         """

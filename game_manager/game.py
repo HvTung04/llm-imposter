@@ -5,9 +5,6 @@ from players_manager.admin import Admin
 
 class Game:
     def __init__(self, answer_timeout=30, min_players=2):
-        # Unique game identifier
-        self.session_id = str(uuid.uuid4())
-
         # Game configuration
         self.answer_timeout = answer_timeout  # seconds
         self.min_players = min_players
@@ -28,7 +25,6 @@ class Game:
             dict: The current state of the game.
         """
         return {
-            "session_id": self.session_id,
             "status": self.status,
             "turn": self.turn,
             "players": list(self.players.keys()),

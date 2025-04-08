@@ -15,7 +15,7 @@ class GroqModel:
         system_prompt=None,
         response_format=None,
         temperature=0.5,
-        max_tokens=2048,
+        max_tokens=512,
         top_p=0.5,
         stream=False,
         stop=None,
@@ -42,6 +42,12 @@ class GroqModel:
         self.top_p = top_p
         self.stream = stream
         self.stop = stop
+        self.memory = [
+            {
+                "role": "system",
+                "content": self.system_prompt,
+            }
+        ] if self.system_prompt else []
 
     def generate_plain_text(self, prompt):
         if self.system_prompt:
@@ -73,6 +79,31 @@ class GroqModel:
 
         output = chat_completion.choices[0].message.content
         return output
+    
+    def memory_chat(self, prompt=None):
+        """
+        Chat with your restored memory
+        """
+        if prompt:
+            self.memory.append({"role": "user", "content": prompt})
+        chat_completion = self.client.chat.completions.create(
+            messages=self.memory,
+            model=self.model_name,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            response_format=self.response_format,
+            top_p=self.top_p,
+            stream=self.stream,
+            stop=self.stop,
+        ).choices[0].message
+        self.memory.append(chat_completion)
+        return chat_completion.content
+    
+    def reset_memory(self):
+        """
+        Reset the memory of the model.
+        """
+        self.memory = []
 
     def tools_chat(self, messages, tools):
         response = (
