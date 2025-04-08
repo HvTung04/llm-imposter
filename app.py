@@ -59,6 +59,20 @@ def next_turn():
     game.play_turn()
     return jsonify({"message": "Moved to the next turn."})
 
+@app.route('/play_turn_ai', methods=['POST'])
+def play_turn_ai():
+    """
+    AI plays the turn.
+    """
+    if not game:
+        return jsonify({"error": "Game session not found."}), 404
+
+    if game.status != "in_progress":
+        return jsonify({"error": "Game is not in progress."}), 400
+
+    game.play_turn_ai()
+    return jsonify({"message": "AI played the turn."})
+
 @app.route('/active_players', methods=['GET'])
 def active_players():
     """
