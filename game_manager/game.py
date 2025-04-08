@@ -15,7 +15,7 @@ class Game:
         self.answers = {} # Key: Player_ID, Value: Answer
 
         # Admin
-        # self.admin = Admin()
+        self.admin = Admin()
 
     def get_state(self):
         """
@@ -60,8 +60,8 @@ class Game:
         Returns:
             str: The generated question.
         """
-        # Placeholder for question generation logic
-        return f"What is the answer to life, the universe, and everything? (Turn {self.turn})"
+        question = self.admin.ask()
+        self.current_question = question
 
     def submit_answer(self, player_id, answer):
         """
