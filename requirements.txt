@@ -2,3 +2,6 @@ groq
 python-dotenv
 flask
 flask-cors
+requests
+qrcode
+Pillow

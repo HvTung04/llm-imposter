@@ -20,6 +20,22 @@ class Game:
         # Admin
         # self.admin = Admin()
 
+    def get_state(self):
+        """
+        Get the current state of the game.
+
+        Returns:
+            dict: The current state of the game.
+        """
+        return {
+            "session_id": self.session_id,
+            "status": self.status,
+            "turn": self.turn,
+            "players": list(self.players.keys()),
+            "current_question": self.current_question,
+            "answers": self.answers
+        }
+
     def add_player(self, player, is_ai=False):
         """
         Add a player to the game.
