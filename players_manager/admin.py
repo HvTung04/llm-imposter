@@ -54,7 +54,7 @@ class Admin:
             prompt += f"Đáp án {i + 1}: {answer}\n"
         scores = self.rank_model.generate_plain_text(prompt)
         
-        for i in range(retry=5):
+        for i in range(retry):
             try:
                 scores = ast.literal_eval(scores)
                 break
