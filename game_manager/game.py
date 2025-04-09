@@ -133,6 +133,7 @@ class Game:
 
         self.turn += 1
         self.generate_question()
+        self.answers = []
         print(f"Question for turn {self.turn}: {self.current_question}")
         self.turn_start_time = time.time()
 
