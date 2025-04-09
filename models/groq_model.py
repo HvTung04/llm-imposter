@@ -97,6 +97,7 @@ class GroqModel:
             stop=self.stop,
         ).choices[0].message
         self.memory.append(chat_completion)
+        self.memory.append({"role": "user", "content": "Now give a new question without any explanation"})
         return chat_completion.content
     
     def reset_memory(self):
