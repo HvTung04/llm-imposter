@@ -24,7 +24,8 @@ class Game:
                     "id": player["id"],
                     "name": player["name"],
                     "is_ai": player["is_ai"],
-                    "eliminated": player["eliminated"]
+                    "eliminated": player["eliminated"],
+                    "turn_eliminated": player["turn_eliminated"]
                 } for player in self.players
             ],
             "current_question": self.current_question,
@@ -39,7 +40,8 @@ class Game:
             "player": player,
             "name": player.name,
             "is_ai": is_ai,
-            "eliminated": False
+            "eliminated": False,
+            "turn_eliminated": -1
         }
         self.players.append(player_data)
         print(f"Player {player.name} added with ID: {player_id}")
@@ -92,6 +94,7 @@ class Game:
         player = self.find_player(player_id)
         if player:
             player["eliminated"] = True
+            player["turn_eliminated"] = self.turn
             print(f"Player {player['name']} has been eliminated.")
         else:
             print(f"Player {player_id} not found.")
