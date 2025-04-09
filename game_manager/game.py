@@ -1,7 +1,9 @@
+import random
 import time
 import uuid
-import random
+
 from players_manager.admin import Admin
+
 
 class Game:
     def __init__(self, answer_timeout=30, min_players=2):
@@ -24,12 +26,13 @@ class Game:
                     "id": player["id"],
                     "name": player["name"],
                     "is_ai": player["is_ai"],
-                    "eliminated": player["eliminated"]
-                } for player in self.players
+                    "eliminated": player["eliminated"],
+                }
+                for player in self.players
             ],
             "current_question": self.current_question,
             "answers": self.answers,
-            "remaining_time": self.get_remaining_time()
+            "remaining_time": self.get_remaining_time(),
         }
 
     def add_player(self, player, is_ai=False):
@@ -39,7 +42,7 @@ class Game:
             "player": player,
             "name": player.name,
             "is_ai": is_ai,
-            "eliminated": False
+            "eliminated": False,
         }
         self.players.append(player_data)
         print(f"Player {player.name} added with ID: {player_id}")
@@ -58,10 +61,7 @@ class Game:
     def submit_answer(self, player_id, answer):
         player = self.find_player(player_id)
         if player and not player["eliminated"]:
-            self.answers.append({
-                "player_id": player_id,
-                "answer": answer
-            })
+            self.answers.append({"player_id": player_id, "answer": answer})
             print(f"Player {player['name']} submitted answer: {answer}")
             return True
         else:
@@ -74,19 +74,39 @@ class Game:
             self.submit_answer(player_id, answer)
 
     def ranking(self):
-        if len(self.answers) != len(self.get_active_players()["ids"]):
-            print("Not all players have answered.")
-            return []
+        players = [
+            {
+                "id": player["id"],
+                "name": player["name"],
+                "is_ai": player["is_ai"],
+                "eliminated": player["eliminated"],
+            }
+            for player in self.players
+        ]
+
+        # if len(self.answers) != len(self.get_active_players()["ids"]):
+        #     print("Not all players have answered.")
+        #     return {
+        #         "error": "Not all players have answered.",
+        #         "players": players,
+        #         "answers": self.answers,
+        #     }
         all_ids = [answer["player_id"] for answer in self.answers]
         all_answers = [answer["answer"] for answer in self.answers]
 
         all_ranks = self.admin.rank(self.current_question, all_answers)
 
-        return [{
-            "player_id": all_ids[i],
-            "answer": all_answers[i],
-            "rank": all_ranks[i]
-        } for i in range(len(all_ids))]
+        return {
+            "scores": [
+                {
+                    "player_id": all_ids[i],
+                    "answer": all_answers[i],
+                    "rank": all_ranks[i],
+                }
+                for i in range(len(all_ids))
+            ],
+            "players": players,
+        }
 
     def eliminate_player(self, player_id):
         player = self.find_player(player_id)
@@ -100,7 +120,7 @@ class Game:
         active_players = [p for p in self.players if not p["eliminated"]]
         return {
             "ids": [p["id"] for p in active_players],
-            "names": [p["name"] for p in active_players]
+            "names": [p["name"] for p in active_players],
         }
 
     def start_game(self):
@@ -122,7 +142,7 @@ class Game:
         for player in self.players:
             if not player["eliminated"] and player["is_ai"]:
                 self.collect_ai_answer(player["id"], player)
-    
+
     def get_remaining_time(self):
         if self.turn_start_time is None:
             return self.answer_timeout
