@@ -117,6 +117,7 @@ class Game:
         self.turn += 1
         self.generate_question()
         print(f"Question for turn {self.turn}: {self.current_question}")
+        self.answers = []  # Reset answers for the new turn
         self.turn_start_time = time.time()
 
     def play_turn_ai(self):
