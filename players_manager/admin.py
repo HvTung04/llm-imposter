@@ -17,7 +17,7 @@ class Admin:
         self.ask_model = GroqModel(
             model_name=model_name,
             system_prompt=ask_system_prompt,
-            temperature=0.5,
+            temperature=1.5,
             max_tokens=128,
             top_p=0.5,
             stream=False,
