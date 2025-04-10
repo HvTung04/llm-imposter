@@ -84,13 +84,25 @@ class Game:
             for player in self.players
         ]
 
-        # if len(self.answers) != len(self.get_active_players()["ids"]):
-        #     print("Not all players have answered.")
-        #     return {
-        #         "error": "Not all players have answered.",
-        #         "players": players,
-        #         "answers": self.answers,
-        #     }
+        player_answered = [item["player_id"] for item in self.answers]
+        answer_dict = {}
+        for answer in self.answers:
+            answer_dict[answer["player_id"]] = answer["answer"]
+
+        for idx, player in enumerate(players):
+            if player["eliminated"]:
+                continue
+
+            if player["id"] not in player_answered:
+                players[idx]["eliminated"] = True
+                self.eliminate_player(player["id"])
+                continue
+
+            if answer_dict[player["id"]] == "":
+                players[idx]["eliminated"] = True
+                self.eliminate_player(player["id"])
+                continue
+            
         all_ids = [answer["player_id"] for answer in self.answers]
         all_answers = [answer["answer"] for answer in self.answers]
 
