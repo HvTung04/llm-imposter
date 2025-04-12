@@ -17,9 +17,9 @@ class Admin:
         self.ask_model = GroqModel(
             model_name=model_name,
             system_prompt=ask_system_prompt,
-            temperature=1.5,
-            max_tokens=128,
-            top_p=0.5,
+            temperature=2,
+            max_tokens=1028,
+            top_p=1,
             stream=False,
             stop=None,
         )
@@ -41,7 +41,7 @@ class Admin:
         Returns:
             str: The generated question.
         """
-        question = self.ask_model.memory_chat(prompt="Hãy trả lại một câu hỏi duy nhất, đừng nói gì khác, đảm bảo mỗi câu hỏi chỉ được hỏi một lần.")
+        question = self.ask_model.memory_chat(prompt="Hãy trả lại một câu hỏi duy nhất bằng Tiếng Việt, đừng nói gì khác, đảm bảo mỗi câu hỏi chỉ được hỏi một lần.")
         return question
 
     def rank(self, question, answers, retry=5):
