@@ -41,7 +41,7 @@ class Admin:
         Returns:
             str: The generated question.
         """
-        question = self.ask_model.memory_chat()
+        question = self.ask_model.memory_chat(prompt="Hãy trả lại một câu hỏi duy nhất, đừng nói gì khác, đảm bảo mỗi câu hỏi chỉ được hỏi một lần.")
         return question
 
     def rank(self, question, answers, retry=5):
