@@ -13,21 +13,28 @@ class AIPlayer(Player):
         self, name, model_name=os.getenv("AI_PLAYER_MODEL"), system_prompt=system_prompt
     ):
         super().__init__(name)
-        self.style = random.choice([
-            "nhàm chán",
-            "hài hước",
-            "rảnh rỗi",
-            "vui vẻ",
-            "thích chơi bời",
-            "nghiêm túc",
-            "chăm học",
-            "thích đùa giỡn",
-            "thiếu kiên nhẫn",
-            "học giỏi",
-            "thích khám phá",
-            "thích tìm hiểu"
-        ])
-        self.model = GroqModel(model_name=model_name, system_prompt=system_prompt.format(style=self.style))
+        self.style = random.choice(
+            [
+                "nhàm chán",
+                "hài hước",
+                "rảnh rỗi",
+                "vui vẻ",
+                "thích chơi bời",
+                "nghiêm túc",
+                "chăm học",
+                "thích đùa giỡn",
+                "thiếu kiên nhẫn",
+                "học giỏi",
+                "thích khám phá",
+                "thích tìm hiểu",
+            ]
+        )
+        self.model = GroqModel(
+            model_name=model_name, system_prompt=system_prompt.format(style=self.style),
+            temperature=0.5,
+            max_tokens=128,
+            top_p=0.5,
+        )
 
     def answer(self, question):
         """
